@@ -82,9 +82,6 @@ public class RentService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
         List<RentEntity> rentedBooks = rentRepository.findAllByUserIdAndStatus(userId, status);
-//        RentEntity rentEntity = new RentEntity();
-//        BookEntity bookEntity = bookRepository.findById(rentEntity.getBookId()).get();
-
         List<BookResponse> collect = rentedBooks.stream()
                 .map(rentEntity -> modelMapper.map(bookRepository.findById(rentEntity.getBookId()).get(), BookResponse.class))
                 .toList();

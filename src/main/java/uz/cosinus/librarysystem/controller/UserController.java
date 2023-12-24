@@ -1,43 +1,54 @@
 package uz.cosinus.librarysystem.controller;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.cosinus.librarysystem.config.jwt.AuthDto;
 import uz.cosinus.librarysystem.config.jwt.JwtResponse;
 import uz.cosinus.librarysystem.dto.request.RentBookRequest;
 import uz.cosinus.librarysystem.dto.request.UserCreateDto;
+import uz.cosinus.librarysystem.dto.response.UserResponseDTO;
 import uz.cosinus.librarysystem.dto.response.RentUpdateResponse;
 import uz.cosinus.librarysystem.service.RentService;
 import uz.cosinus.librarysystem.service.UserService;
+
+import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/user")
 public class UserController {
     private final UserService userService;
-    private final RentService rentBookService;
 
-    @PostMapping("/rent-book")
-    public ResponseEntity<String> rentBook(@RequestBody RentBookRequest request){
-        return ResponseEntity.status(200).body(rentBookService.rentBook(request));
+    @PutMapping("/update")
+    public ResponseEntity<UserResponseDTO> update(@RequestBody UserCreateDto userCreateDto, Principal principal){
+        return ResponseEntity.ok(userService.updateProfile(userCreateDto, principal));
     }
 
-    @PutMapping("/take-away")
-    public ResponseEntity<RentUpdateResponse> takeAway(@RequestBody RentUpdateResponse updateResponse){
-        return ResponseEntity.status(200).body(rentBookService.takeAway(updateResponse));
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> me(Principal principal){
+        return ResponseEntity.ok(userService.me(principal));
     }
 
-    @PermitAll
-    @PostMapping("/sign-in")
-    public JwtResponse signIn(@Valid @RequestBody AuthDto dto) {
-        return userService.signIn(dto);
+    @DeleteMapping("/delete")
+    public  ResponseEntity<String > delete(Principal principal){
+        return ResponseEntity.status(200).body(userService.delete(principal));
     }
 
-    @PostMapping("/sign-up")
-    public String auth(@Valid @RequestBody UserCreateDto dto) {
-        return userService.add(dto);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PostMapping("/create-admin")
+    public ResponseEntity<UserResponseDTO> createAdmin(@RequestBody @Valid UserCreateDto userCr) {
+        return ResponseEntity.ok(userService.addAdmin(userCr));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create-moderator")
+    public ResponseEntity<UserResponseDTO> createModerator(@RequestBody @Valid UserCreateDto userCr) {
+        return ResponseEntity.ok(userService.addModerator(userCr));
+    }
+
+
 }
